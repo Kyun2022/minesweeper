@@ -31,6 +31,7 @@ export default function Minesweeper() {
   const [minesLeft, setMinesLeft] = useState<number>(difficulties[difficulty].mines);
   const [timer, setTimer] = useState<number>(0);
   const [timerInterval, setTimerInterval] = useState<NodeJS.Timeout | null>(null);
+  const [flagMode, setFlagMode] = useState<boolean>(false);
 
   // ゲームの初期化
   const initializeGame = () => {
@@ -80,6 +81,7 @@ export default function Minesweeper() {
     setGameStatus('ready');
     setMinesLeft(mines);
     setTimer(0);
+    setFlagMode(false);
 
     // タイマーをリセット
     if (timerInterval) {
@@ -113,6 +115,18 @@ export default function Minesweeper() {
       }
     };
   }, [difficulty]);
+
+  // セルをクリックした時の処理
+  const handleCellClick = (row: number, col: number) => {
+    // フラグモードがオンの場合はフラグを切り替える
+    if (flagMode) {
+      toggleFlag(row, col);
+      return;
+    }
+
+    // 通常モードではセルを開く
+    revealCell(row, col);
+  };
 
   // セルを開く処理
   const revealCell = (row: number, col: number) => {
@@ -202,6 +216,11 @@ export default function Minesweeper() {
     setBoard(newBoard);
   };
 
+  // フラグモードを切り替える
+  const toggleFlagMode = () => {
+    setFlagMode(prev => !prev);
+  };
+
   // 勝利条件のチェック
   const checkWinCondition = (board: CellState[][]) => {
     const { rows, cols, mines } = difficulties[difficulty];
@@ -286,6 +305,14 @@ export default function Minesweeper() {
             スタート
           </button>
         )}
+
+        <button
+          onClick={toggleFlagMode}
+          className={`px-4 py-2 rounded ${flagMode ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-500 hover:bg-gray-600'} text-white`}
+          type="button"
+        >
+          {flagMode ? '🚩 フラグモード: オン' : '🚩 フラグモード: オフ'}
+        </button>
       </div>
 
       {gameStatus === 'won' && (
@@ -307,7 +334,7 @@ export default function Minesweeper() {
               <Cell
                 key={`${rowIndex}-${colIndex}`}
                 state={cell}
-                onClick={() => revealCell(rowIndex, colIndex)}
+                onClick={() => handleCellClick(rowIndex, colIndex)}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   toggleFlag(rowIndex, colIndex);
